@@ -18,7 +18,14 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
-} as IconMapping;
+
+  // добавленные:
+  'calendar': 'calendar-today',
+  'newspaper': 'article',
+  'person.crop.circle': 'person',
+  'ellipsis.circle': 'more-horiz',
+} as const;
+
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.

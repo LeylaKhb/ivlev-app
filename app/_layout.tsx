@@ -1,24 +1,49 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import {
+    DarkTheme,
+    DefaultTheme,
+    getFocusedRouteNameFromRoute, ParamListBase,
+    RouteProp,
+    ThemeProvider
+} from '@react-navigation/native';
+import {Stack} from 'expo-router';
+import {StatusBar} from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import {useColorScheme} from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+    anchor: '(tabs)',
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+    const colorScheme = useColorScheme();
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    function getHeaderTitle(route: RouteProp<ParamListBase, string>) {
+        const routeName = getFocusedRouteNameFromRoute(route) ?? 'Главная';
+
+        switch (routeName) {
+            case 'index':
+                return 'Главная';
+            case 'profile':
+                return 'Профиль';
+            case 'schedule':
+                return 'Расписание';
+            case 'news':
+                return 'Новости';
+            case 'more':
+                return 'Ещё';
+        }
+    }
+
+    return (
+        <ThemeProvider value={DefaultTheme}>
+            <Stack screenOptions={{headerShown: true, headerTitleAlign: 'center',}}>
+                <Stack.Screen name="(tabs)" options={({route}) => ({
+                    headerTitle: getHeaderTitle(route),
+                })}/>
+                <Stack.Screen name="modal" options={{presentation: 'modal', title: 'Modal'}}/>
+            </Stack>
+            <StatusBar style="auto"/>
+        </ThemeProvider>
+    );
 }
