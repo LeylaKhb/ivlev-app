@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {ActivityIndicator, FlatList, ScrollView, View} from 'react-native';
-import {SegmentedControl} from '@/components/schedule/segmented-control';
+import {SegmentedControl} from '@/components/segmented-control';
 import {ThemedText} from "@/components/themed-text";
 import {Supply} from "@/models/Supply";
 import {SupplyList} from "@/components/schedule/supplies-list";
+import {useTabEffect} from "@/hooks/use-tab-effect";
 
 export default function ScheduleScreen() {
     const [allSupplies, setAllSupplies] = useState<Supply[]>([]);
@@ -44,7 +45,7 @@ export default function ScheduleScreen() {
     }
 
     return (
-        <ScrollView>
+        <View style={{padding: 20}}>
             <SegmentedControl
                 options={['WB', 'OZON / ЯМ / ТК']}
                 onChange={(index) => {
@@ -54,6 +55,6 @@ export default function ScheduleScreen() {
                 style={{marginBottom: 15}}
             />
             <SupplyList supplies={supplies}/>
-        </ScrollView>
+        </View>
     );
 }

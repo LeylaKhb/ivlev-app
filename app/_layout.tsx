@@ -16,8 +16,6 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-    const colorScheme = useColorScheme();
-
     function getHeaderTitle(route: RouteProp<ParamListBase, string>) {
         const routeName = getFocusedRouteNameFromRoute(route) ?? 'Главная';
 
@@ -37,13 +35,17 @@ export default function RootLayout() {
 
     return (
         <ThemeProvider value={DefaultTheme}>
-            <Stack screenOptions={{headerShown: true, headerTitleAlign: 'center',}}>
-                <Stack.Screen name="(tabs)" options={({route}) => ({
-                    headerTitle: getHeaderTitle(route),
-                })}/>
-                <Stack.Screen name="modal" options={{presentation: 'modal', title: 'Modal'}}/>
+            <Stack screenOptions={{ headerShown: true, headerTitleAlign: 'center' }}>
+                <Stack.Screen
+                    name="(tabs)"
+                    options={({ route }) => ({
+                        headerTitle: getHeaderTitle(route),
+                    })}
+                />
+                <Stack.Screen name="auth-modal" options={{ presentation: 'modal', title: 'Авторизация' }} />
+                <Stack.Screen name="modal" options={{ title: 'Заявка на поставку' }} />
             </Stack>
-            <StatusBar style="auto"/>
+            <StatusBar style="auto" />
         </ThemeProvider>
     );
 }

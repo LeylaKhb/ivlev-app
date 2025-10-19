@@ -16,7 +16,6 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
                                                                       selectedIndex = 0,
                                                                       onChange,
                                                                       activeColor = '#b752c9',
-                                                                      inactiveColor = '#b752c9',
                                                                       style,
                                                                   }) => {
     const [currentIndex, setCurrentIndex] = useState(selectedIndex);
@@ -25,8 +24,21 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
 
     const handlePress = (index: number) => {
         setCurrentIndex(index);
+
+        if (containerWidth === 0) return;
+
+        // мгновенно ставим текущую позицию, чтобы анимация начиналась с правильного места
+        slideAnim.setValue((containerWidth / options.length) * currentIndex);
+
+        Animated.timing(slideAnim, {
+            toValue: (containerWidth / options.length) * index,
+            duration: 150, // укоротили до 150ms для ощущения более быстрого отклика
+            useNativeDriver: false,
+        }).start();
+
         onChange && onChange(index);
     };
+
 
     useEffect(() => {
         if (containerWidth === 0) return;
