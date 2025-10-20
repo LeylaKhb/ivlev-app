@@ -10,6 +10,7 @@ import {StatusBar} from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import {useColorScheme} from '@/hooks/use-color-scheme';
+import {AppDataProvider} from "@/contexts/AppDataContext";
 
 export const unstable_settings = {
     anchor: '(tabs)',
@@ -35,17 +36,21 @@ export default function RootLayout() {
 
     return (
         <ThemeProvider value={DefaultTheme}>
-            <Stack screenOptions={{ headerShown: true, headerTitleAlign: 'center' }}>
-                <Stack.Screen
-                    name="(tabs)"
-                    options={({ route }) => ({
-                        headerTitle: getHeaderTitle(route),
-                    })}
-                />
-                <Stack.Screen name="auth-modal" options={{ presentation: 'modal', title: 'Авторизация' }} />
-                <Stack.Screen name="modal" options={{ title: 'Заявка на поставку' }} />
-            </Stack>
-            <StatusBar style="auto" />
+            <AppDataProvider>
+
+                <Stack screenOptions={{headerShown: true, headerTitleAlign: 'center'}}>
+                    <Stack.Screen
+                        name="(tabs)"
+                        options={({route}) => ({
+                            headerTitle: getHeaderTitle(route),
+                        })}
+                    />
+                    <Stack.Screen name="auth-modal" options={{presentation: 'modal', title: 'Авторизация'}}/>
+                    <Stack.Screen name="modal" options={{title: 'Заявка на поставку'}}/>
+                    <Stack.Screen name="companies" options={{presentation: 'modal', title: 'Компании'}}/>
+                </Stack>
+                <StatusBar style="auto"/>
+            </AppDataProvider>
         </ThemeProvider>
     );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Company } from '@/models/Company';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {Person} from "@/models/Person";
 
-export const useCompanies = () => {
-    const [companies, setCompanies] = useState<Company[]>([]);
-    const [companiesLoading, setLoading] = useState(true);
+export const usePerson = () => {
+    const [person, setPerson] = useState<Person>();
+    const [personLoading, setLoading] = useState(true);
     const [jwt, setJwt] = useState<string | null>(null);
 
     useEffect(() => {
@@ -14,19 +15,19 @@ export const useCompanies = () => {
     useEffect(() => {
         if (jwt == null) {
             setLoading(false);
-            setCompanies([]);
+            setPerson(undefined);
             return;
         }
-        fetch('https://kodrf.ru/api/companies', {
+        fetch('https://kodrf.ru/personal_account', {
             headers: {
                 Accept: 'application/json',
                 Authorization: 'Bearer ' + jwt,
             },
         })
             .then((r) => r.json())
-            .then(setCompanies)
+            .then(setPerson)
             .finally(() => setLoading(false));
     }, []);
 
-    return { companies, companiesLoading };
+    return {person, personLoading}
 };

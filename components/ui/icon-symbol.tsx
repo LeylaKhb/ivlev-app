@@ -24,6 +24,8 @@ const MAPPING = {
   'newspaper': 'article',
   'person.crop.circle': 'person',
   'ellipsis.circle': 'more-horiz',
+  'rectangle.portrait.and.arrow.right': 'logout',
+  'pencil': 'edit',
 } as const;
 
 

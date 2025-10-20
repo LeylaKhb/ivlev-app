@@ -1,19 +1,30 @@
-import React, {useState} from 'react';
-import {Pressable, StyleSheet, View, TextInput, Text, Alert} from 'react-native';
-import {Link, useRouter} from 'expo-router';
-import {ThemedView} from '@/components/themed-view';
-import {SegmentedControl} from '@/components/segmented-control';
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {ThemedText} from "@/components/themed-text";
+import React, { useState } from 'react';
+import {
+    Pressable,
+    StyleSheet,
+    View,
+    TextInput,
+    Text,
+    Alert,
+    ActivityIndicator,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { ThemedView } from '@/components/themed-view';
+import { SegmentedControl } from '@/components/segmented-control';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ThemedText } from '@/components/themed-text';
+import { useAppData } from '@/contexts/AppDataContext'; // <- импорт хука контекста
 
 export default function AuthModalScreen() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const options = ['Вход', 'Регистрация'];
     const router = useRouter();
+    const { setJwt } = useAppData(); // <- хук провайдера
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async () => {
         const isRegistration = selectedIndex === 1;
@@ -27,29 +38,38 @@ export default function AuthModalScreen() {
             return;
         }
 
-        const person = {name, email, password};
-        const url =
-            isRegistration
-                ? 'https://kodrf.ru/registration'
-                : 'https://kodrf.ru/login';
+        setLoading(true);
+        const person = { name, email, password };
+        const url = isRegistration ? 'https://kodrf.ru/registration' : 'https://kodrf.ru/login';
 
         try {
             const resp = await fetch(url, {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 body: JSON.stringify(person),
             });
+
             const data = await resp.json();
 
             if (data.header !== 'error') {
-                // Сохраняем JWT
+                // Извлекаем токен (как у тебя)
                 const token = data.content.includes('*') ? data.content.split('*')[0] : data.content;
                 const admin = data.content.includes('*') ? data.content.split('*')[1] : null;
-                // AsyncStorage или SecureStore
-                await AsyncStorage.setItem('jwt', token);
-                if (admin) await AsyncStorage.setItem('admin', admin);
 
+                // 1) Обновляем контекст — setJwt должен при необходимости сохранять токен и подгружать person/companies
+                // Если в твоём контексте setJwt НЕ сохраняет token в AsyncStorage, можно предварительно сохранить:
+                // await AsyncStorage.setItem('jwt', token);
+                await setJwt(token); // <- важно: дождаться окончания, чтобы provider успел обновить данные
+
+                // 2) Преференсы admin (если нужно)
+                if (admin) {
+                    await AsyncStorage.setItem('admin', admin);
+                } else {
+                    await AsyncStorage.removeItem('admin');
+                }
+
+                // 3) Закрываем модалку только после того, как провайдер обновился
                 router.dismissAll();
             } else {
                 Alert.alert('Ошибка', data.content);
@@ -57,12 +77,19 @@ export default function AuthModalScreen() {
         } catch (e) {
             console.error(e);
             Alert.alert('Ошибка', 'Не удалось выполнить запрос');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <ThemedView style={styles.container}>
-            <SegmentedControl options={options} selectedIndex={selectedIndex} onChange={setSelectedIndex} style={{marginBottom: 20}}/>
+            <SegmentedControl
+                options={options}
+                selectedIndex={selectedIndex}
+                onChange={setSelectedIndex}
+                style={{ marginBottom: 20 }}
+            />
 
             {selectedIndex === 1 && (
                 <TextInput
@@ -92,19 +119,20 @@ export default function AuthModalScreen() {
                 placeholderTextColor="#999"
             />
 
-            {/*TODO при регистрации добавить галочку Я согласен с политикой конфиденциальности*/}
-            <Pressable onPress={handleSubmit} style={styles.button}>
-                <ThemedText style={styles.buttonText}>
-                    {selectedIndex === 0 ? 'Войти' : 'Зарегистрироваться'}
-                </ThemedText>
+            <Pressable onPress={handleSubmit} style={[styles.button, loading && { opacity: 0.7 }]} disabled={loading}>
+                {loading ? (
+                    <ActivityIndicator color="#fff" />
+                ) : (
+                    <ThemedText style={styles.buttonText}>{selectedIndex === 0 ? 'Войти' : 'Зарегистрироваться'}</ThemedText>
+                )}
             </Pressable>
         </ThemedView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff'},
-    text: {marginTop: 20, textAlign: 'center'},
+    container: { flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#fff' },
+    text: { marginTop: 20, textAlign: 'center' },
     input: {
         width: '80%',
         padding: 10,
@@ -120,5 +148,5 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginTop: 15,
     },
-    buttonText: {color: '#fff', fontWeight: '600'},
+    buttonText: { color: '#fff', fontWeight: '600' },
 });

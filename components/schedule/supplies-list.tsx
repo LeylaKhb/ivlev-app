@@ -7,28 +7,19 @@ import {Link} from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useTabEffect} from "@/hooks/use-tab-effect";
 import {useCompanies} from "@/hooks/use-companies";
+import {usePerson} from "@/hooks/use-person";
+import {Company} from "@/models/Company";
+import {Person} from "@/models/Person";
 
 interface SupplyItemProps {
     supply: Supply;
+    companies: Company[] | null;
+    person: Person | null;
 }
 
-export const SupplyItem: React.FC<SupplyItemProps> = ({supply}) => {
+export const SupplyItem: React.FC<SupplyItemProps> = ({supply, companies, person}) => {
     const departureDate = new Date(supply.departureDate);
     const acceptanceDate = new Date(supply.acceptanceDate);
-    const [jwt, setJwt] = useState<string | null>(null);
-
-    useTabEffect("/schedule", () => {
-        AsyncStorage.getItem('jwt').then(token => {
-            setJwt(token)
-        });
-    })
-
-    useEffect(() => {
-        AsyncStorage.getItem('jwt').then(token => {
-            setJwt(token)
-        });
-
-    }, []);
 
     function getWeekDay(date: Date) {
         const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
@@ -41,7 +32,9 @@ export const SupplyItem: React.FC<SupplyItemProps> = ({supply}) => {
         if (departureDateStr === '1970-01-01') {
             return (
                 <View style={styles.dateBlock}>
-                    <ThemedText style={styles.departureDate}>Вт, Ср, Пт, Сб</ThemedText>
+                    <ThemedText style={styles.departureDate}>Вт, Ср,</ThemedText>
+                    <ThemedText style={styles.departureDate}>Пт, Сб</ThemedText>
+
                 </View>
             );
         }
@@ -67,7 +60,7 @@ export const SupplyItem: React.FC<SupplyItemProps> = ({supply}) => {
         );
     };
 
-    if (!jwt) {
+    if (person === undefined || person === null) {
         return (
             <Link href="/auth-modal" asChild>
                 <Pressable style={styles.itemContainer}>
@@ -80,6 +73,24 @@ export const SupplyItem: React.FC<SupplyItemProps> = ({supply}) => {
         );
     }
 
+    if (companies === null || companies.length === 0) {
+        return (
+            <Link
+                href={{
+                    pathname: '/companies',
+                    params: {jsonPerson: JSON.stringify(person)},
+                }}
+                asChild
+            >
+                <Pressable style={styles.itemContainer}>
+                    <View style={styles.leftColumn}>{renderDateBlock()}</View>
+                    <View style={styles.rightColumn}>
+                        <ThemedText style={styles.title}>{supply.title}</ThemedText>
+                    </View>
+                </Pressable>
+            </Link>
+        );
+    }
     return (
         <Link
             href={{
@@ -99,12 +110,13 @@ export const SupplyItem: React.FC<SupplyItemProps> = ({supply}) => {
 }
 
 
-export const SupplyList: React.FC<{ supplies: Supply[] }> = ({supplies}) => {
+export const SupplyList: React.FC<{ supplies: Supply[], companies: Company[] | null, person: Person | null }>
+    = ({supplies, companies, person}) => {
     return (
         <FlatList
             data={supplies}
             keyExtractor={(item) => item.id.toString()}
-            renderItem={({item}) => <SupplyItem supply={item}/>}
+            renderItem={({item}) => <SupplyItem supply={item} person={person} companies={companies}/>}
             contentContainerStyle={{paddingBottom: 80}}
         />
     );
@@ -131,6 +143,7 @@ const styles = StyleSheet.create({
                 fontSize: 16,
                 fontWeight: '500',
                 color: '#000',
+
             },
             acceptanceDate: {
                 fontSize: 12,
